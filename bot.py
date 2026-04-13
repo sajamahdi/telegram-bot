@@ -4,7 +4,6 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests
-
 TOKEN = "8743669525:AAEWtf2qwJQHhBRzGUlgEDw5gHpmsmZl1o8"
 GROUP_ID = -1002235821304
 
@@ -103,7 +102,7 @@ async def start(message: types.Message):
 async def get_phone(message: types.Message):
     phone = message.text.strip()
 
-    data = sheet.get_all_records()
+    data = get_children_data()
     children = [row for row in data if str(row['Phone']) == phone]
 
     if not children:
@@ -378,13 +377,13 @@ async def confirm(callback: types.CallbackQuery):
         message_thread_id=thread_id,
         reply_markup=keyboard
     )
-@dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
+@dp.callback_query_handler(lambda c: c.data in ["ready", "shipped"])
 async def update_status(callback: types.CallbackQuery):
     await callback.answer()
 
-    data = callback.data.split("|")
-    action = data[0]
-    invoice = data[1]
+
+    action = callback.data
+    invoice = "غير متوفر"
 
     if action == "ready":
         await callback.message.answer(f"📦 تم تجهيز الطلب رقم {invoice}")
