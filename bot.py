@@ -385,12 +385,12 @@ keyboard.add(InlineKeyboardButton(
     "🚚 تم الشحن",
     callback_data=f"shipped|{invoice}"
 ))
-await bot.send_message(
-chat_id=GROUP_ID,
-text=text,
-message_thread_id=thread_id,
-reply_markup=keyboard
-)
+    await bot.send_message(
+    chat_id=GROUP_ID,
+    text=text,
+    message_thread_id=thread_id,
+    reply_markup=keyboard
+    )
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
     await callback.answer()
