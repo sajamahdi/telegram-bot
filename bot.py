@@ -1,15 +1,9 @@
-import json
-import os
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import logging
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import requests
 
 TOKEN = "8743669525:AAEWtf2qwJQHhBRzGUlgEDw5gHpmsmZl1o8"
 GROUP_ID = -1002235821304
@@ -24,40 +18,25 @@ dp = Dispatcher(bot)
 
 logging.basicConfig(level=logging.INFO)
 
+SHEET1_ID="1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ"
+SHEET_ID="1F5Hntr6K6D9TaBFemE0ZaQuaTygP2G9MaXSfzi-OM0Y"
 # 🔹 Google Sheets
-scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
-]
-
-creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
-
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-
-client = gspread.authorize(creds)
-
-sheet = client.open_by_key("1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ").worksheet("children_data")
-orders_sheet = client.open_by_key("1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ").worksheet("orders_data")
-
-import requests
-
-SHEET_ID = "1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ"
-
-def get_sheet(name):
-    url = f"https://opensheet.elk.sh/{SHEET_ID}/{name}"
+def get_children_data():
+    url = f"https://opensheet.elk.sh/{SHEET1_ID}/children_data"
     return requests.get(url).json()
 
-def get_children():
-    return get_sheet("children_data")
 
 def get_orders():
-    return get_sheet("orders_data")
+    url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
+    return requests.get(url).json()
+
 
 def get_invoice():
-    records = orders_sheet.get_all_records()
+    records = get_orders()
     if not records:
         return 1001
     return int(records[-1]["Invoice_ID"]) + 1
+
 
 # 🔥 جميع الكروبات + القصص (كما هي)
 STORIES = {
@@ -125,14 +104,7 @@ async def get_phone(message: types.Message):
     phone = message.text.strip()
 
     data = sheet.get_all_records()
-
-    children = []
-
-    for row in data:
-        phone_value = str(row.get('Phone', '')).strip()
-
-        if phone == phone_value:
-            children.append(row)
+    children = [row for row in data if str(row['Phone']) == phone]
 
     if not children:
         await message.answer("❌ الرقم غير موجود")
@@ -148,6 +120,7 @@ async def get_phone(message: types.Message):
     }
 
     await ask_type(message, user_id)
+
 # 🔹 عرض الطفل
 async def ask_type(message, user_id):
     state = user_state[user_id]
@@ -355,16 +328,55 @@ async def confirm(callback: types.CallbackQuery):
 
     await callback.message.answer("🎉 تم استلام الطلب بنجاح")
 
-    # ✅ التخزين (انتبه للمسافات)
-    orders_sheet.append_row([
-        state["invoice"],
-        state["main_phone"],
-        datetime.now().strftime("%Y-%m-%d"),
-        callback.from_user.id
-    ])
+  url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
 
+data = {
+    "Invoice_ID": state["invoice"],
+    "Phone": state["main_phone"],
+    "Date": datetime.now().strftime("%Y-%m-%d"),
+    "User_ID": callback.from_user.id
+}
+
+requests.post(url, json=data)
+    # 🔥 من هنا يبدأ النص (كلشي مزاح بمسافة وحدة)
     children_count = len(state["children"])
     thread_id = TOPICS[children_count]
+
+    text = "🧾 طلب جديد\n\n"
+
+    text += f"🆔 رقم الفاتورة: {state['invoice']}\n"
+    text += f"📱 الهاتف: {state['main_phone']}\n\n"
+
+    for o in state["orders"]:
+        text += f"👶 {o['child']} - {o['type']}\n"
+
+        if o["items"]:
+            for item in o["items"]:
+                text += f"   - {item}\n"
+
+        text += f"💰 {o['total']}\n\n"
+
+    if state.get("extra"):
+        text += "🟡 يوجد طلب قصص خارج النادي\n\n"
+
+    text += f"📍 العنوان: {state['address']}\n"
+    text += f"📞 هاتف الشحن: {state['shipping_phone']}\n\n"
+
+    total = sum(o["total"] for o in state["orders"]) + 5000
+
+    text += f"🚚 التوصيل: 5000\n"
+    text += f"💵 المجموع: {total}\n"
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton("📦 تم التجهيز", callback_data="ready"))
+    keyboard.add(InlineKeyboardButton("🚚 تم الشحن", callback_data="shipped"))
+
+    await bot.send_message(
+        chat_id=GROUP_ID,
+        text=text,
+        message_thread_id=thread_id,
+        reply_markup=keyboard
+    )
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
     await callback.answer()
@@ -380,10 +392,4 @@ async def update_status(callback: types.CallbackQuery):
         await callback.message.answer(f"🚚 تم شحن الطلب رقم {invoice}")
 # 🔹 تشغيل
 if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling()
-
-    asyncio.run(main())
+    executor.start_polling(dp, skip_updates=True)
