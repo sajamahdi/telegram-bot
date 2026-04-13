@@ -27,7 +27,7 @@ scope = [
 ]
 
 creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "D:/ghyma/2026/program/code/credentials.json",
+    "credentials.json",
     scope
 )
 
