@@ -332,7 +332,7 @@ await message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query_handler(lambda c: c.data == "confirm")
 async def confirm(callback: types.CallbackQuery):
-await callback.answer()
+    await callback.answer()
 
 
 user_id = callback.from_user.id
@@ -402,7 +402,7 @@ await bot.send_message(
 
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
-await callback.answer()
+    await callback.answer()
 
 
 data = callback.data.split("|")
