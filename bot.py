@@ -1,6 +1,7 @@
+import json
 import os
-
-print("TEST ENV:", os.getenv("GOOGLE_CREDENTIALS"))
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 import logging
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
@@ -29,6 +30,15 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
+creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
+
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+
+client = gspread.authorize(creds)
+
+sheet = client.open_by_key("1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ").worksheet("children_data")
+orders_sheet = client.open_by_key("1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ").worksheet("orders_data")
+
 import requests
 
 SHEET_ID = "1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ"
@@ -44,7 +54,10 @@ def get_orders():
     return get_sheet("orders_data")
 
 def get_invoice():
-    return int(datetime.now().timestamp())
+    records = orders_sheet.get_all_records()
+    if not records:
+        return 1001
+    return int(records[-1]["Invoice_ID"]) + 1
 
 # 🔥 جميع الكروبات + القصص (كما هي)
 STORIES = {
@@ -111,11 +124,7 @@ async def start(message: types.Message):
 async def get_phone(message: types.Message):
     phone = message.text.strip()
 
-    data = get_children()
-
-    print("DATA:", data)  # للتأكد
-
-    children = []
+   data = sheet.get_all_records()
 
     for row in data:
         phone_value = str(row.get('Phone', '')).strip()
@@ -346,12 +355,12 @@ async def confirm(callback: types.CallbackQuery):
 
     await callback.message.answer("🎉 تم استلام الطلب بنجاح")
 
-   # orders_sheet.append_row([
-#     state["invoice"],
-#     state["main_phone"],
-#     datetime.now().strftime("%Y-%m-%d"),
-#     callback.from_user.id
-# ])
+  orders_sheet.append_row([
+    state["invoice"],
+    state["main_phone"],
+    datetime.now().strftime("%Y-%m-%d"),
+    callback.from_user.id
+])
 
     # 🔥 من هنا يبدأ النص (كلشي مزاح بمسافة وحدة)
     children_count = len(state["children"])
