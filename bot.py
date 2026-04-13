@@ -29,29 +29,22 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-import os
-import json
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import requests
 
-scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
-]
+SHEET_ID = "1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ"
 
-creds_json = os.getenv("GOOGLE_CREDENTIALS")
-creds_dict = json.loads(creds_json)
+def get_sheet(name):
+    url = f"https://opensheet.elk.sh/{SHEET_ID}/{name}"
+    return requests.get(url).json()
 
-creds = ServiceAccountCredentials.from_json_keyfile_dict(
-    creds_dict,
-    scope
-)
+def get_children():
+    return get_sheet("children_data")
 
-client = gspread.authorize(creds)
-sheet = client.open("children_data").sheet1
-orders_sheet=client.open("orders_data").sheet1
+def get_orders():
+    return get_sheet("orders_data")
+
 def get_invoice():
-    records = orders_sheet.get_all_records()
+    records = get_orders()
     if not records:
         return 1001
     return int(records[-1]["Invoice_ID"]) + 1
@@ -121,7 +114,7 @@ async def start(message: types.Message):
 async def get_phone(message: types.Message):
     phone = message.text.strip()
 
-    data = sheet.get_all_records()
+    data = get_children()
     children = [row for row in data if str(row['Phone']) == phone]
 
     if not children:
@@ -346,12 +339,12 @@ async def confirm(callback: types.CallbackQuery):
 
     await callback.message.answer("🎉 تم استلام الطلب بنجاح")
 
-    orders_sheet.append_row([
-        state["invoice"],
-        state["main_phone"],
-        datetime.now().strftime("%Y-%m-%d"),
-        callback.from_user.id
-    ])
+   # orders_sheet.append_row([
+#     state["invoice"],
+#     state["main_phone"],
+#     datetime.now().strftime("%Y-%m-%d"),
+#     callback.from_user.id
+# ])
 
     # 🔥 من هنا يبدأ النص (كلشي مزاح بمسافة وحدة)
     children_count = len(state["children"])
