@@ -410,4 +410,10 @@ async def update_status(callback: types.CallbackQuery):
         await callback.message.answer(f"🚚 تم شحن الطلب رقم {invoice}")
 # 🔹 تشغيل
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    import asyncio
+
+    async def main():
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling()
+
+    asyncio.run(main())
