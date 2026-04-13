@@ -10,7 +10,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-TOKEN = "8743669525:AAHLZkAnLV1ZKDhqXmmqO7d5SgLUCvhqV5o"
+TOKEN = "8743669525:AAEWtf2qwJQHhBRzGUlgEDw5gHpmsmZl1o8"
 GROUP_ID = -1002235821304
 
 TOPICS = {
