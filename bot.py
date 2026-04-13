@@ -292,43 +292,45 @@ async def get_address(message: types.Message):
 # 🔹 رقم الشحن + الفاتورة
 @dp.message_handler(lambda m: user_state.get(m.from_user.id, {}).get("step") == "shipping")
 async def get_phone_shipping(message: types.Message):
-    user_id = message.from_user.id
-    state = user_state[user_id]
+user_id = message.from_user.id
+state = user_state[user_id]
 
-    state["shipping_phone"] = message.text
-    invoice = get_invoice()
-    state["invoice"]=invoice
-    total = sum(o["total"] for o in state["orders"]) + 5000
-    date_now = datetime.now().strftime("%Y-%m-%d")
+```
+state["shipping_phone"] = message.text
+invoice = get_invoice()
+state["invoice"] = invoice
 
-    text = f"🧾 رقم الفاتورة:{invoice}\n\n"
-    text += f"📅 التاريخ: {date_now}\n"
-    text += f"📱 الرقم الأساسي: {state['main_phone']}\n"
-    text += f"📞 رقم الشحن: {state['shipping_phone']}\n"
-    text += f"📍 العنوان: {state['address']}\n\n"
+total = sum(o["total"] for o in state["orders"]) + 5000
+date_now = datetime.now().strftime("%Y-%m-%d")
 
-    for o in state["orders"]:
-        text += f"👶 {o['child']} - {o['type']}\n"
-        for item in o["items"]:
-            text += f"   - {item}\n"
-        text += f"💰 {o['total']}\n\n"
+text = f"🧾 رقم الفاتورة: {invoice}\n\n"
+text += f"📅 التاريخ: {date_now}\n"
+text += f"📱 الرقم الأساسي: {state['main_phone']}\n"
+text += f"📞 رقم الشحن: {state['shipping_phone']}\n"
+text += f"📍 العنوان: {state['address']}\n\n"
 
-    if state.get("extra"):
-        text += "🟡 طلب قصص خارج النادي (سيتم التواصل)\n\n"
+for o in state["orders"]:
+    text += f"👶 {o['child']} - {o['type']}\n"
+    for item in o["items"]:
+        text += f"   - {item}\n"
+    text += f"💰 {o['total']}\n\n"
 
-    text += f"🚚 التوصيل: 5000\n"
-    text += f"💵 المجموع: {total}\n\n"
-    text += "هل تأكيد الطلب؟"
+if state.get("extra"):
+    text += "🟡 طلب قصص خارج النادي (سيتم التواصل)\n\n"
 
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("✅ تأكيد", callback_data="confirm"))
+text += f"🚚 التوصيل: 5000\n"
+text += f"💵 المجموع: {total}\n\n"
+text += "هل تأكيد الطلب؟"
 
-    await message.answer(text, reply_markup=keyboard)
+keyboard = InlineKeyboardMarkup()
+keyboard.add(InlineKeyboardButton("✅ تأكيد", callback_data="confirm"))
+
+await message.answer(text, reply_markup=keyboard)
 
 # 🔹 تأكيد
 @dp.callback_query_handler(lambda c: c.data == "confirm")
 async def confirm(callback: types.CallbackQuery):
-await callback.answer()
+    await callback.answer()
 
 user_id = callback.from_user.id
 state = user_state[user_id]
