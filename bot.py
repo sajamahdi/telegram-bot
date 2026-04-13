@@ -328,72 +328,73 @@ async def get_phone_shipping(message: types.Message):
 # 🔹 تأكيد
 @dp.callback_query_handler(lambda c: c.data == "confirm")
 async def confirm(callback: types.CallbackQuery):
-    await callback.answer()
+await callback.answer()
 
-    user_id = callback.from_user.id
-    state = user_state[user_id]
+user_id = callback.from_user.id
+state = user_state[user_id]
 
-    await callback.message.answer("🎉 تم استلام الطلب بنجاح")
+# 🔹 تخزين في Google Sheet
+url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
 
-    # 🔥 التخزين الجديد
-    url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
+data = {
+    "Invoice_ID": state["invoice"],
+    "Phone": state["main_phone"],
+    "Date": datetime.now().strftime("%Y-%m-%d"),
+    "User_ID": callback.from_user.id
+}
 
-    data = {
-        "Invoice_ID": state["invoice"],
-        "Phone": state["main_phone"],
-        "Date": datetime.now().strftime("%Y-%m-%d"),
-        "User_ID": callback.from_user.id
-    }
+requests.post(url, json=data)
 
-    requests.post(url, json=data)
-    # 🔥 من هنا يبدأ النص (كلشي مزاح بمسافة وحدة)
-    children_count = len(state["children"])
-    thread_id = TOPICS[children_count]
+# 🔹 تحديد التوبك
+children_count = len(state["children"])
+thread_id = TOPICS[children_count]
 
-    text = "🧾 طلب جديد\n\n"
+# 🔹 بناء النص
+text = "📄 طلب جديد\n\n"
+text += f"🆔 رقم الفاتورة: {state['invoice']}\n"
+text += f"📱 الهاتف: {state['main_phone']}\n\n"
 
-    text += f"🆔 رقم الفاتورة: {state['invoice']}\n"
-    text += f"📱 الهاتف: {state['main_phone']}\n\n"
+for o in state["orders"]:
+    text += f"👶 {o['child']} - {o['type']}\n"
 
-    for o in state["orders"]:
-        text += f"👶 {o['child']} - {o['type']}\n"
+    if o["items"]:
+        for item in o["items"]:
+            text += f" - {item}\n"
 
-        if o["items"]:
-            for item in o["items"]:
-                text += f"   - {item}\n"
+    text += f"🔥 {o['total']}\n\n"
 
-        text += f"💰 {o['total']}\n\n"
+if state.get("extra"):
+    text += "➕ يوجد طلب إضافي\n\n"
 
-    if state.get("extra"):
-        text += "🟡 يوجد طلب قصص خارج النادي\n\n"
+text += f"📍 العنوان: {state['address']}\n"
+text += f"📞 هاتف الشحن: {state['shipping_phone']}\n\n"
 
-    text += f"📍 العنوان: {state['address']}\n"
-    text += f"📞 هاتف الشحن: {state['shipping_phone']}\n\n"
+total = sum(o["total"] for o in state["orders"]) + 5000
+text += f"🚚 التوصيل: 5000\n"
+text += f"💰 المجموع: {total}\n"
 
-    total = sum(o["total"] for o in state["orders"]) + 5000
-
-    text += f"🚚 التوصيل: 5000\n"
-    text += f"💵 المجموع: {total}\n"
-
+# 🔹 الأزرار
 invoice = state.get("invoice", "0000")
-keyboard = InlineKeyboardMarkup()
 
+keyboard = InlineKeyboardMarkup()
 keyboard.add(InlineKeyboardButton(
     "📦 تم التجهيز",
     callback_data=f"ready|{invoice}"
 ))
-
 keyboard.add(InlineKeyboardButton(
     "🚚 تم الشحن",
     callback_data=f"shipped|{invoice}"
 ))
 
+# 🔹 إرسال للكروب
 await bot.send_message(
     chat_id=GROUP_ID,
     text=text,
     message_thread_id=thread_id,
     reply_markup=keyboard
 )
+
+
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
     await callback.answer()
