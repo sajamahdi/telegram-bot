@@ -355,52 +355,16 @@ async def confirm(callback: types.CallbackQuery):
 
     await callback.message.answer("🎉 تم استلام الطلب بنجاح")
 
-  orders_sheet.append_row([
-    state["invoice"],
-    state["main_phone"],
-    datetime.now().strftime("%Y-%m-%d"),
-    callback.from_user.id
-])
+    # ✅ التخزين (انتبه للمسافات)
+    orders_sheet.append_row([
+        state["invoice"],
+        state["main_phone"],
+        datetime.now().strftime("%Y-%m-%d"),
+        callback.from_user.id
+    ])
 
-    # 🔥 من هنا يبدأ النص (كلشي مزاح بمسافة وحدة)
     children_count = len(state["children"])
     thread_id = TOPICS[children_count]
-
-    text = "🧾 طلب جديد\n\n"
-
-    text += f"🆔 رقم الفاتورة: {state['invoice']}\n"
-    text += f"📱 الهاتف: {state['main_phone']}\n\n"
-
-    for o in state["orders"]:
-        text += f"👶 {o['child']} - {o['type']}\n"
-
-        if o["items"]:
-            for item in o["items"]:
-                text += f"   - {item}\n"
-
-        text += f"💰 {o['total']}\n\n"
-
-    if state.get("extra"):
-        text += "🟡 يوجد طلب قصص خارج النادي\n\n"
-
-    text += f"📍 العنوان: {state['address']}\n"
-    text += f"📞 هاتف الشحن: {state['shipping_phone']}\n\n"
-
-    total = sum(o["total"] for o in state["orders"]) + 5000
-
-    text += f"🚚 التوصيل: 5000\n"
-    text += f"💵 المجموع: {total}\n"
-
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("📦 تم التجهيز", callback_data="ready"))
-    keyboard.add(InlineKeyboardButton("🚚 تم الشحن", callback_data="shipped"))
-
-    await bot.send_message(
-        chat_id=GROUP_ID,
-        text=text,
-        message_thread_id=thread_id,
-        reply_markup=keyboard
-    )
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
     await callback.answer()
