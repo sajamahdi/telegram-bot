@@ -124,15 +124,16 @@ async def start(message: types.Message):
 async def get_phone(message: types.Message):
     phone = message.text.strip()
 
-   data = sheet.get_all_records()
+    data = sheet.get_all_records()
+
+    children = []
 
     for row in data:
         phone_value = str(row.get('Phone', '')).strip()
 
-        if phone in phone_value:
+        if phone == phone_value:
             children.append(row)
 
-    # 🔴 إذا ماكو نتائج
     if not children:
         await message.answer("❌ الرقم غير موجود")
         return
@@ -147,7 +148,6 @@ async def get_phone(message: types.Message):
     }
 
     await ask_type(message, user_id)
-
 # 🔹 عرض الطفل
 async def ask_type(message, user_id):
     state = user_state[user_id]
