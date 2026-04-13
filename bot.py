@@ -42,8 +42,6 @@ try:
     creds_dict = json.loads(creds_json)
 except Exception as e:
     raise Exception(f"JSON ERROR ❌: {e}")
-)
-
 client = gspread.authorize(creds)
 sheet = client.open("children_data").sheet1
 orders_sheet=client.open("orders_data").sheet1
