@@ -114,13 +114,15 @@ async def start(message: types.Message):
 async def get_phone(message: types.Message):
     phone = message.text.strip()
 
-    data = get_children()
-    children = [row for row in data if str(row['Phone']) == phone]
+   data = get_children()
 
-    if not children:
-        await message.answer("❌ الرقم غير موجود")
-        return
+children = []
 
+for row in data:
+    phone_value = str(row.get('Phone', '')).strip()
+
+    if phone in phone_value:
+        children.append(row)
     user_id = message.from_user.id
 
     user_state[user_id] = {
