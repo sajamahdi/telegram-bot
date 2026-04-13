@@ -328,16 +328,17 @@ async def confirm(callback: types.CallbackQuery):
 
     await callback.message.answer("🎉 تم استلام الطلب بنجاح")
 
-  url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
+    # 🔥 التخزين الجديد
+    url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
 
-data = {
-    "Invoice_ID": state["invoice"],
-    "Phone": state["main_phone"],
-    "Date": datetime.now().strftime("%Y-%m-%d"),
-    "User_ID": callback.from_user.id
-}
+    data = {
+        "Invoice_ID": state["invoice"],
+        "Phone": state["main_phone"],
+        "Date": datetime.now().strftime("%Y-%m-%d"),
+        "User_ID": callback.from_user.id
+    }
 
-requests.post(url, json=data)
+    requests.post(url, json=data)
     # 🔥 من هنا يبدأ النص (كلشي مزاح بمسافة وحدة)
     children_count = len(state["children"])
     thread_id = TOPICS[children_count]
