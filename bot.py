@@ -290,6 +290,7 @@ async def get_address(message: types.Message):
     await message.answer("📞 أدخلي رقم هاتف الشحن:")
 
 # 🔹 رقم الشحن + الفاتورة
+
 @dp.message_handler(lambda m: user_state.get(m.from_user.id, {}).get("step") == "shipping")
 async def get_phone_shipping(message: types.Message):
 user_id = message.from_user.id
@@ -326,12 +327,15 @@ keyboard = InlineKeyboardMarkup()
 keyboard.add(InlineKeyboardButton("✅ تأكيد", callback_data="confirm"))
 
 await message.answer(text, reply_markup=keyboard)
+```
 
 # 🔹 تأكيد
+
 @dp.callback_query_handler(lambda c: c.data == "confirm")
 async def confirm(callback: types.CallbackQuery):
-    await callback.answer()
+await callback.answer()
 
+```
 user_id = callback.from_user.id
 state = user_state[user_id]
 
@@ -395,7 +399,23 @@ await bot.send_message(
     message_thread_id=thread_id,
     reply_markup=keyboard
 )
+```
 
+@dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
+async def update_status(callback: types.CallbackQuery):
+await callback.answer()
+
+```
+data = callback.data.split("|")
+action = data[0]
+invoice = data[1]
+
+if action == "ready":
+    await callback.message.answer(f"📦 تم تجهيز الطلب رقم {invoice}")
+
+elif action == "shipped":
+    await callback.message.answer(f"🚚 تم شحن الطلب رقم {invoice}")
+```
 
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
