@@ -33,11 +33,15 @@ import os
 import json
 from oauth2client.service_account import ServiceAccountCredentials
 
-creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
+creds_json = os.getenv("GOOGLE_CREDENTIALS")
 
-creds = ServiceAccountCredentials.from_json_keyfile_dict(
-    creds_dict,
-    scope
+if not creds_json:
+    raise Exception("GOOGLE_CREDENTIALS is EMPTY ❌")
+
+try:
+    creds_dict = json.loads(creds_json)
+except Exception as e:
+    raise Exception(f"JSON ERROR ❌: {e}")
 )
 
 client = gspread.authorize(creds)
