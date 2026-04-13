@@ -3,7 +3,7 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import requests
+
 TOKEN = "8743669525:AAEWtf2qwJQHhBRzGUlgEDw5gHpmsmZl1o8"
 GROUP_ID = -1002235821304
 
@@ -16,7 +16,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
 logging.basicConfig(level=logging.INFO)
-
+import requests
 SHEET1_ID="1TAMC95sqo9yZ3hvQ9R2NtJPZoeoKT251WiKh1azxcRQ"
 SHEET_ID="1F5Hntr6K6D9TaBFemE0ZaQuaTygP2G9MaXSfzi-OM0Y"
 # 🔹 Google Sheets
