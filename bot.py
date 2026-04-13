@@ -26,8 +26,16 @@ def get_children_data():
 
 
 def get_orders():
-    url = f"https://opensheet.elk.sh/{SHEET_ID}/orders_data"
-    return requests.get(url).json()
+    url = "https://docs.google.com/forms/d/e/1FAIpQLScQ2kwVLq11VB0VYXzZnl8LBSx1CblrZoJP7tmoQ96saqIKSg/formResponse"
+
+data = {
+    "entry.1036835944": state["invoice"],
+    "entry.801142180": state["main_phone"],
+    "entry.864298934": datetime.now().strftime("%Y-%m-%d"),
+    "entry.1745833732": callback.from_user.id
+}
+
+requests.post(url, data=data)
 
 
 def get_invoice():
@@ -368,8 +376,15 @@ async def confirm(callback: types.CallbackQuery):
     text += f"💵 المجموع: {total}\n"
 
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("📦 تم التجهيز", callback_data="ready"))
-    keyboard.add(InlineKeyboardButton("🚚 تم الشحن", callback_data="shipped"))
+    keyboard.add(InlineKeyboardButton(
+    "📦 تم التجهيز",
+    callback_data=f"ready|{state['invoice']}"
+))
+
+keyboard.add(InlineKeyboardButton(
+    "🚚 تم الشحن",
+    callback_data=f"shipped|{state['invoice']}"
+))
 
     await bot.send_message(
         chat_id=GROUP_ID,
@@ -377,13 +392,14 @@ async def confirm(callback: types.CallbackQuery):
         message_thread_id=thread_id,
         reply_markup=keyboard
     )
-@dp.callback_query_handler(lambda c: c.data in ["ready", "shipped"])
+@dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
     await callback.answer()
 
 
-    action = callback.data
-    invoice = "غير متوفر"
+    data = callback.data.split("|")
+    action = data[0]
+    invoice = data[1]
 
     if action == "ready":
         await callback.message.answer(f"📦 تم تجهيز الطلب رقم {invoice}")
