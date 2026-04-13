@@ -44,10 +44,7 @@ def get_orders():
     return get_sheet("orders_data")
 
 def get_invoice():
-    records = get_orders()
-    if not records:
-        return 1001
-    return int(records[-1]["Invoice_ID"]) + 1
+    return int(datetime.now().timestamp())
 
 # 🔥 جميع الكروبات + القصص (كما هي)
 STORIES = {
