@@ -324,7 +324,6 @@ text += "هل تأكيد الطلب؟"
 
 keyboard = InlineKeyboardMarkup()
 keyboard.add(InlineKeyboardButton("✅ تأكيد", callback_data="confirm"))
-
     await message.answer(text, reply_markup=keyboard)
 
 
