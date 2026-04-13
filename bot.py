@@ -1,3 +1,6 @@
+import os
+
+print("TEST ENV:", os.getenv("GOOGLE_CREDENTIALS"))
 import logging
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
