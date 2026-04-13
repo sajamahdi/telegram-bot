@@ -116,6 +116,8 @@ async def get_phone(message: types.Message):
 
     data = get_children()
 
+    print("DATA:", data)  # للتأكد
+
     children = []
 
     for row in data:
@@ -124,7 +126,7 @@ async def get_phone(message: types.Message):
         if phone in phone_value:
             children.append(row)
 
-    # ❗ إذا ماكو نتائج
+    # 🔴 إذا ماكو نتائج
     if not children:
         await message.answer("❌ الرقم غير موجود")
         return
