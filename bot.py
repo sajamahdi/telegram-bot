@@ -293,11 +293,10 @@ async def get_address(message: types.Message):
 
 @dp.message_handler(lambda m: user_state.get(m.from_user.id, {}).get("step") == "shipping")
 async def get_phone_shipping(message: types.Message):
-user_id = message.from_user.id
-state = user_state[user_id]
+    user_id = message.from_user.id
+    state = user_state[user_id]
 
-```
-state["shipping_phone"] = message.text
+    state["shipping_phone"] = message.text
 invoice = get_invoice()
 state["invoice"] = invoice
 
