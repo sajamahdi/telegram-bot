@@ -31,17 +31,22 @@ scope = [
 
 import os
 import json
+import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
+
 creds_json = os.getenv("GOOGLE_CREDENTIALS")
+creds_dict = json.loads(creds_json)
 
-if not creds_json:
-    raise Exception("GOOGLE_CREDENTIALS is EMPTY ❌")
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    creds_dict,
+    scope
+)
 
-try:
-    creds_dict = json.loads(creds_json)
-except Exception as e:
-    raise Exception(f"JSON ERROR ❌: {e}")
 client = gspread.authorize(creds)
 sheet = client.open("children_data").sheet1
 orders_sheet=client.open("orders_data").sheet1
