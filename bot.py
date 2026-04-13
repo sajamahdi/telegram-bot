@@ -326,7 +326,7 @@ keyboard = InlineKeyboardMarkup()
 keyboard.add(InlineKeyboardButton("✅ تأكيد", callback_data="confirm"))
 
 await message.answer(text, reply_markup=keyboard)
-```
+
 
 # 🔹 تأكيد
 
@@ -334,7 +334,7 @@ await message.answer(text, reply_markup=keyboard)
 async def confirm(callback: types.CallbackQuery):
 await callback.answer()
 
-```
+
 user_id = callback.from_user.id
 state = user_state[user_id]
 
@@ -398,13 +398,13 @@ await bot.send_message(
     message_thread_id=thread_id,
     reply_markup=keyboard
 )
-```
+
 
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
 await callback.answer()
 
-```
+
 data = callback.data.split("|")
 action = data[0]
 invoice = data[1]
@@ -414,7 +414,7 @@ if action == "ready":
 
 elif action == "shipped":
     await callback.message.answer(f"🚚 تم شحن الطلب رقم {invoice}")
-```
+
 
 @dp.callback_query_handler(lambda c: c.data.startswith(("ready|", "shipped|")))
 async def update_status(callback: types.CallbackQuery):
